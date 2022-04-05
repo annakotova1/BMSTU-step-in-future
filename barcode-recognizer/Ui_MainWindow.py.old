@@ -1,0 +1,103 @@
+# -*- coding: utf-8 -*-
+
+# Form implementation generated from reading ui file 'mainWindow.ui'
+#
+# Created by: PyQt5 UI code generator 5.7
+#
+# WARNING! All changes made in this file will be lost!
+from QtViewImage import QtImageViewer
+
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtGui import QImage, QPixmap, QPainterPath
+
+import os.path
+
+
+
+class Ui_MainWindow(object):
+    controller = None
+
+    def setupUi(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(1140, 819)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.imageView = QtImageViewer(self.centralwidget)
+        self.imageView.setGeometry(QtCore.QRect(0, 0, 771, 581))
+        self.imageView.setObjectName("imageView")
+        self.layersList = QtWidgets.QListWidget(self.centralwidget)
+        self.layersList.setGeometry(QtCore.QRect(779, 0, 351, 311))
+        self.layersList.itemChanged.connect(self.on_layer_list_item_change)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.layersList.sizePolicy().hasHeightForWidth())
+        self.layersList.setSizePolicy(sizePolicy)
+        self.layersList.setSelectionRectVisible(False)
+        self.layersList.setObjectName("layersList")
+        self.log = QtWidgets.QPlainTextEdit(self.centralwidget)
+        self.log.setGeometry(QtCore.QRect(0, 590, 771, 201))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.log.sizePolicy().hasHeightForWidth())
+        self.log.setSizePolicy(sizePolicy)
+        self.log.setReadOnly(True)
+        self.log.setObjectName("log")
+        MainWindow.setCentralWidget(self.centralwidget)
+
+        self.menubar = QtWidgets.QMenuBar(MainWindow)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1140, 23))
+        self.menubar.setObjectName("menubar")
+        self.menu = QtWidgets.QMenu(self.menubar)
+        self.menu.setObjectName("menu")
+        MainWindow.setMenuBar(self.menubar)
+
+        self.openFile = QtWidgets.QAction(MainWindow)
+        self.openFile.setObjectName("openFile")
+        self.openFile.triggered.connect(self.open_file)
+        self.menu.addAction(self.openFile)
+        self.menubar.addAction(self.menu.menuAction())
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "Barcode Recognizer"))
+        self.menu.setTitle(_translate("MainWindow", "Файл"))
+        self.openFile.setText(_translate("MainWindow", "Открыть..."))
+        self.openFile.setShortcut(_translate("MainWindow", "Ctrl+O"))
+
+    def on_layer_list_item_change(self, layerListItem):
+        blockLayer = self.blockLayers[layerListItem.text()]
+        checkState = layerListItem.checkState()
+        if checkState == QtCore.Qt.Unchecked:
+            blockLayer.hide()
+        else:
+            blockLayer.show()
+
+
+    def open_file(self):
+        fileName, dummy = QtWidgets.QFileDialog.getOpenFileName(self.centralwidget, "Open image file.")
+        if len(fileName) and os.path.isfile(fileName):
+            image = QImage(fileName)
+            self.imageView.filename=fileName
+            self.imageView.setImage(image)
+            self.controller.set_image(fileName)
+            self.controller.calculate()
+            self.blockLayers = self.controller.draw_layers(self.imageView.scene)
+            self.layersList.clear()
+            for blockLayerName, blockLayer in self.blockLayers.items():
+                item = QtWidgets.QListWidgetItem(blockLayerName)
+                item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+                item.setCheckState(QtCore.Qt.Unchecked)
+                self.layersList.addItem(item)
+
+
+
+
+
+
+
+
